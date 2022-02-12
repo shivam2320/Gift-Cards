@@ -59,7 +59,7 @@ contract GiftCards is Ownable, ERC721, ERC721Enumerable, ERC721URIStorage {
             bytes(
                 string(
                     abi.encodePacked(
-                        '{"name": "Wagmi Card #',
+                        '{"name": "Gift Card #',
                         toString(newID),
                         '", "description": "',
                         message, '. Redeem at link',
