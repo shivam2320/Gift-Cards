@@ -1,17 +1,19 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./Base64.sol";
 
-
-contract GiftCards is Ownable, ERC721, ERC721Enumerable, ERC721URIStorage {
+contract GiftCards is Ownable, ERC721, ERC721URIStorage {
     using Counters for Counters.Counter;
     Counters.Counter public _tokenIDs;
+
+    uint public totalSupply = 0;
+    uint public maxTotalSupply = 14;
+    uint minAmount = 1 ether;
 
     struct Gift {
         uint256 tokenID;
@@ -35,6 +37,9 @@ contract GiftCards is Ownable, ERC721, ERC721Enumerable, ERC721URIStorage {
     ) ERC721(_name, _symbol) {}
 
     function mint(address ownerAddress, uint256 redeem_at, string memory message, string memory imageLink) public payable returns (uint256) {
+
+        require(totalSupply <= maxTotalSupply, "Only 14 NFTs can be minted");
+        require(msg.value > minAmount,"Amount must be greater than 1 matic");
 
         // check if message length is greater than 140 chars
         require(bytes(message).length <= 140, "Message cannot be greater than 140 characters");
@@ -74,6 +79,7 @@ contract GiftCards is Ownable, ERC721, ERC721Enumerable, ERC721URIStorage {
         );
 
         _safeMint(ownerAddress, newID);
+        totalSupply++;
         _setTokenURI(newID, finalTokenUri);
 
         emit GiftMintedToOwner(msg.sender, ownerAddress);
@@ -126,6 +132,11 @@ contract GiftCards is Ownable, ERC721, ERC721Enumerable, ERC721URIStorage {
         }
     }
 
+    function changeMaxTotalSupply(uint256 newSupply) public onlyOwner returns (uint256) {
+        maxTotalSupply = newSupply;
+        return maxTotalSupply;
+    }
+
     function transferToken(
         address from,
         address to,
@@ -139,7 +150,7 @@ contract GiftCards is Ownable, ERC721, ERC721Enumerable, ERC721URIStorage {
         address from,
         address to,
         uint256 tokenId
-    ) internal override(ERC721, ERC721Enumerable) {
+    ) internal override(ERC721) {
         super._beforeTokenTransfer(from, to, tokenId);
     }
 
@@ -166,7 +177,7 @@ contract GiftCards is Ownable, ERC721, ERC721Enumerable, ERC721URIStorage {
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC721, ERC721Enumerable)
+        override(ERC721)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
